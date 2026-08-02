@@ -1,0 +1,74 @@
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.metric-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border-top: 3px solid #E0E0E0;
+  transition: box-shadow 0.15s;
+
+  &:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+  &.level-warning { border-top-color: #FF9800; background: #FFFDE7; }
+  &.level-critical { border-top-color: #F44336; background: #FFF5F5; }
+  &.level-normal  { border-top-color: #4CAF50; }
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.metric-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #9E9E9E;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #757575;
+  font-weight: 500;
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #212121;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+
+  .level-warning & { color: #E65100; }
+  .level-critical & { color: #C62828; }
+}
+
+.metric-unit {
+  font-size: 13px;
+  font-weight: 400;
+  color: #9E9E9E;
+}
+
+.metric-thresholds {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.threshold {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+
+  &.warn { background: #FFF3E0; color: #E65100; }
+  &.crit { background: #FFEBEE; color: #C62828; }
+}

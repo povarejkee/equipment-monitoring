@@ -1,0 +1,60 @@
+<a class="machine-card" [class]="statusClass" [routerLink]="['/machines', machine.id]" matRipple>
+  <div class="card-status-bar"></div>
+
+  <div class="card-header">
+    <div class="machine-icon" [class]="'icon-' + machine.type">
+      <mat-icon>{{ typeIcons[machine.type] }}</mat-icon>
+    </div>
+    <div class="machine-info">
+      <div class="machine-name">{{ machine.name }}</div>
+      <div class="machine-meta">
+        <span class="machine-type">{{ typeLabels[machine.type] }}</span>
+        <span class="machine-location">· {{ machine.location }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-status">
+    <app-status-badge [status]="machine.status"></app-status-badge>
+  </div>
+
+  @if (isActive) {
+    <div class="card-metrics">
+      <div class="metric">
+        <mat-icon class="metric-icon">thermostat</mat-icon>
+        <span class="metric-val" [class]="tempClass">{{ machine.metrics.temperature | number:'1.0-1' }}°C</span>
+        <span class="metric-label">Темп.</span>
+      </div>
+      <div class="metric">
+        <mat-icon class="metric-icon">speed</mat-icon>
+        <span class="metric-val" [class]="loadClass">{{ machine.metrics.load | number:'1.0-0' }}%</span>
+        <span class="metric-label">Нагрузка</span>
+      </div>
+      <div class="metric">
+        <mat-icon class="metric-icon">inventory_2</mat-icon>
+        <span class="metric-val normal">{{ machine.metrics.output }}</span>
+        <span class="metric-label">Дет./час</span>
+      </div>
+    </div>
+  } @else {
+    <div class="card-metrics card-metrics--inactive">
+      <mat-icon class="inactive-icon">power_off</mat-icon>
+      <span class="inactive-text">
+        @if (machine.status === 'maintenance') { На обслуживании }
+        @else if (machine.status === 'offline') { Нет связи }
+        @else { Простой }
+      </span>
+    </div>
+  }
+
+  @if (machine.metrics.vibration !== undefined && isActive) {
+    <div class="card-footer">
+      <mat-icon class="footer-icon">vibration</mat-icon>
+      <span>{{ machine.metrics.vibration | number:'1.1-1' }} мм/с</span>
+      @if (machine.metrics.powerConsumption) {
+        <mat-icon class="footer-icon">bolt</mat-icon>
+        <span>{{ machine.metrics.powerConsumption | number:'1.0-1' }} кВт</span>
+      }
+    </div>
+  }
+</a>

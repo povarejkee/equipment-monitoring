@@ -1,0 +1,38 @@
+@if (machine$ | async; as machine) {
+  <div class="detail-page">
+    <div class="page-header">
+      <a class="back-link" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon> Назад
+      </a>
+      <div class="machine-headline">
+        <div class="machine-title-row">
+          <h1 class="machine-name">{{ machine.name }}</h1>
+          <app-status-badge [status]="machine.status"></app-status-badge>
+        </div>
+        <div class="machine-meta">
+          <span><mat-icon>category</mat-icon> {{ typeLabels[machine.type] }}</span>
+          <span><mat-icon>location_on</mat-icon> {{ machine.location }}</span>
+          <span><mat-icon>schedule</mat-icon> Работа: {{ machine.metrics.uptime }}ч</span>
+          <span class="last-updated"><mat-icon>sync</mat-icon> Обновлено: {{ machine.lastUpdated | date:'HH:mm:ss' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <h2 class="section-heading">Метрики в реальном времени</h2>
+      <app-metrics-panel [metrics]="machine.metrics" [machineType]="machine.type"></app-metrics-panel>
+    </section>
+
+    <section class="section">
+      <h2 class="section-heading">История метрик</h2>
+      <app-history-chart [machineId]="machine.id"></app-history-chart>
+    </section>
+
+    <div class="two-col">
+      <app-downtime-log [machineId]="machine.id"></app-downtime-log>
+      <app-alert-history [machineId]="machine.id"></app-alert-history>
+    </div>
+  </div>
+} @else {
+  <app-loading-spinner></app-loading-spinner>
+}

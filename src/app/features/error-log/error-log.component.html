@@ -1,0 +1,114 @@
+<div class="error-log-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Журнал ошибок</h1>
+      <p class="page-subtitle">Аварийные остановки и неисправности за последние 30 дней</p>
+    </div>
+    <button mat-stroked-button (click)="exportCsv()" class="export-btn">
+      <mat-icon>download</mat-icon> Экспорт CSV
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Статус</mat-label>
+      <mat-select [(ngModel)]="filterStatus" (ngModelChange)="applyFilters()">
+        <mat-option value="">Все</mat-option>
+        <mat-option value="active">Активные</mat-option>
+        <mat-option value="resolved">Решённые</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Тип ошибки</mat-label>
+      <mat-select [(ngModel)]="filterType" (ngModelChange)="applyFilters()">
+        <mat-option value="">Все типы</mat-option>
+        @for (t of typeOptions; track t.value) {
+          <mat-option [value]="t.value">{{ t.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Станок</mat-label>
+      <mat-select [(ngModel)]="filterMachine" (ngModelChange)="applyFilters()">
+        <mat-option value="">Все станки</mat-option>
+        @for (m of machines; track m) {
+          <mat-option [value]="m">{{ m }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (hasFilters) {
+      <button mat-stroked-button (click)="clearFilters()">
+        <mat-icon>filter_alt_off</mat-icon> Сбросить
+      </button>
+    }
+
+    <span class="results-count">{{ dataSource.filteredData.length }} записей</span>
+  </div>
+
+  <div class="table-card">
+    <table mat-table [dataSource]="dataSource" matSort class="error-table">
+
+      <ng-container matColumnDef="timestamp">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Дата / Время</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="date-primary">{{ row.timestamp | date:'dd.MM.yyyy' }}</span>
+          <span class="date-time">{{ row.timestamp | date:'HH:mm' }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="machineName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Станок</th>
+        <td mat-cell *matCellDef="let row"><strong>{{ row.machineName }}</strong></td>
+      </ng-container>
+
+      <ng-container matColumnDef="errorCode">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Код</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="error-code">{{ row.errorCode }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="errorType">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Тип</th>
+        <td mat-cell *matCellDef="let row">
+          <span class="type-chip">{{ getTypeLabel(row.errorType) }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef>Описание</th>
+        <td mat-cell *matCellDef="let row" class="desc-cell">{{ row.description }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Статус</th>
+        <td mat-cell *matCellDef="let row">
+          @if (row.resolvedAt) {
+            <span class="status-chip resolved"><mat-icon>check_circle</mat-icon> Решена</span>
+          } @else {
+            <span class="status-chip active"><mat-icon>error</mat-icon> Активна</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="duration">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Простой</th>
+        <td mat-cell *matCellDef="let row">{{ row.duration ? row.duration + ' мин' : '—' }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          class="clickable-row" (click)="openDetail(row)"></tr>
+    </table>
+
+    @if (dataSource.filteredData.length === 0) {
+      <div class="empty-table">
+        <mat-icon>check_circle_outline</mat-icon>
+        <span>Ошибок не найдено</span>
+      </div>
+    }
+  </div>
+</div>

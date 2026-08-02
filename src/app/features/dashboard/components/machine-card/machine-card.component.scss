@@ -1,0 +1,133 @@
+.machine-card {
+  display: block;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  transition: box-shadow 0.15s, transform 0.15s;
+  position: relative;
+
+  &:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+  }
+
+  &.status-error .card-status-bar   { background: #F44336; }
+  &.status-warning .card-status-bar { background: #FF9800; }
+  &.status-running .card-status-bar { background: #4CAF50; }
+  &.status-idle .card-status-bar    { background: #9E9E9E; }
+  &.status-maintenance .card-status-bar { background: #2196F3; }
+  &.status-offline .card-status-bar { background: #616161; }
+}
+
+.card-status-bar {
+  height: 4px;
+  width: 100%;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px 10px;
+}
+
+.machine-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon { font-size: 22px; width: 22px; height: 22px; }
+
+  &.icon-cnc        { background: #E3F2FD; color: #1565C0; }
+  &.icon-lathe      { background: #F3E5F5; color: #6A1B9A; }
+  &.icon-milling    { background: #E8F5E9; color: #2E7D32; }
+  &.icon-grinding   { background: #FFF3E0; color: #E65100; }
+  &.icon-press      { background: #FCE4EC; color: #880E4F; }
+}
+
+.machine-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #212121;
+  line-height: 1.2;
+}
+
+.machine-meta {
+  font-size: 12px;
+  color: #9E9E9E;
+  margin-top: 2px;
+
+  .machine-type { color: #757575; }
+}
+
+.card-status {
+  padding: 0 16px 10px;
+}
+
+.card-metrics {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px;
+  background: #FAFAFA;
+  border-top: 1px solid #F0F0F0;
+
+  &--inactive {
+    justify-content: center;
+    gap: 8px;
+    color: #9E9E9E;
+  }
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+
+  .metric-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #BDBDBD;
+    margin-bottom: 2px;
+  }
+}
+
+.metric-val {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+
+  &.normal   { color: #212121; }
+  &.warning  { color: #E65100; }
+  &.critical { color: #C62828; }
+}
+
+.metric-label {
+  font-size: 10px;
+  color: #9E9E9E;
+  margin-top: 2px;
+}
+
+.inactive-icon { font-size: 18px; width: 18px; height: 18px; }
+.inactive-text { font-size: 13px; }
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 16px;
+  font-size: 11px;
+  color: #9E9E9E;
+  border-top: 1px solid #F5F5F5;
+
+  .footer-icon { font-size: 14px; width: 14px; height: 14px; }
+}

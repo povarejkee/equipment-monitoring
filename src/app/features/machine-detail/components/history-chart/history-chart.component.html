@@ -1,0 +1,34 @@
+<div class="chart-container">
+  <div class="chart-toolbar">
+    <div class="chart-metrics">
+      <label class="metric-toggle temp">
+        <input type="checkbox" [(ngModel)]="showTemperature" (ngModelChange)="buildChart()">
+        <span>Температура</span>
+      </label>
+      <label class="metric-toggle load">
+        <input type="checkbox" [(ngModel)]="showLoad" (ngModelChange)="buildChart()">
+        <span>Нагрузка</span>
+      </label>
+      <label class="metric-toggle output">
+        <input type="checkbox" [(ngModel)]="showOutput" (ngModelChange)="buildChart()">
+        <span>Выработка</span>
+      </label>
+    </div>
+
+    <mat-button-toggle-group [(ngModel)]="period" (ngModelChange)="loadData()" class="period-toggle">
+      <mat-button-toggle value="1h">1ч</mat-button-toggle>
+      <mat-button-toggle value="6h">6ч</mat-button-toggle>
+      <mat-button-toggle value="24h">24ч</mat-button-toggle>
+      <mat-button-toggle value="7d">7д</mat-button-toggle>
+      <mat-button-toggle value="30d">30д</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas baseChart
+            [data]="chartData"
+            [options]="chartOptions"
+            type="line">
+    </canvas>
+  </div>
+</div>

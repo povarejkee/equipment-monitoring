@@ -1,0 +1,144 @@
+<div class="reports-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Отчёты по производительности</h1>
+      <p class="page-subtitle">Анализ работы оборудования за выбранный период</p>
+    </div>
+    @if (reportData) {
+      <button mat-flat-button color="accent" (click)="exportPdf()">
+        <mat-icon>picture_as_pdf</mat-icon> Экспорт PDF
+      </button>
+    }
+  </div>
+
+  <div class="report-layout">
+    <!-- Панель параметров -->
+    <mat-card class="builder-card">
+      <mat-card-header><mat-card-title>Параметры отчёта</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Дата с</mat-label>
+          <input matInput [matDatepicker]="pickerFrom" [(ngModel)]="params.dateFrom">
+          <mat-datepicker-toggle matIconSuffix [for]="pickerFrom"></mat-datepicker-toggle>
+          <mat-datepicker #pickerFrom></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Дата по</mat-label>
+          <input matInput [matDatepicker]="pickerTo" [(ngModel)]="params.dateTo">
+          <mat-datepicker-toggle matIconSuffix [for]="pickerTo"></mat-datepicker-toggle>
+          <mat-datepicker #pickerTo></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Группировка</mat-label>
+          <mat-select [(ngModel)]="params.groupBy">
+            <mat-option value="hour">По часам</mat-option>
+            <mat-option value="day">По дням</mat-option>
+            <mat-option value="week">По неделям</mat-option>
+            <mat-option value="month">По месяцам</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <p class="machine-select-label">Станки (пусто = все):</p>
+        <div class="machine-checklist">
+          @for (m of machines; track m.id) {
+            <mat-checkbox
+              [checked]="isMachineSelected(m.id)"
+              (change)="toggleMachine(m.id)"
+              class="machine-check">
+              {{ m.name }}
+            </mat-checkbox>
+          }
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-flat-button color="primary" class="full-width" (click)="generate()" [disabled]="loading">
+          <mat-icon>assessment</mat-icon> Сформировать
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Результаты -->
+    <div class="report-results">
+      @if (loading) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+
+      @if (reportData) {
+        <!-- Сводка -->
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">Общая выработка</div>
+            <div class="summary-value primary">{{ reportData.summary.totalOutput | number }} <span>дет.</span></div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Среднее время работы</div>
+            <div class="summary-value">{{ reportData.summary.avgUptime }}<span>%</span></div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Суммарный простой</div>
+            <div class="summary-value warn">{{ reportData.summary.totalDowntime }}<span>ч</span></div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Ошибок за период</div>
+            <div class="summary-value err">{{ reportData.summary.totalErrors }}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Эффективность</div>
+            <div class="summary-value">{{ reportData.summary.efficiency }}<span>%</span></div>
+          </div>
+        </div>
+
+        <!-- График выработки -->
+        <mat-card class="chart-card">
+          <mat-card-header><mat-card-title>Выработка по периодам</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <div class="chart-wrap">
+              <canvas baseChart [data]="barChartData" [options]="barChartOptions" type="bar"></canvas>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Таблица по станкам -->
+        <mat-card class="table-card">
+          <mat-card-header><mat-card-title>Разбивка по станкам</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <table mat-table [dataSource]="reportData.machineBreakdown" class="breakdown-table">
+              <ng-container matColumnDef="machineName">
+                <th mat-header-cell *matHeaderCellDef>Станок</th>
+                <td mat-cell *matCellDef="let row"><strong>{{ row.machineName }}</strong></td>
+              </ng-container>
+              <ng-container matColumnDef="totalOutput">
+                <th mat-header-cell *matHeaderCellDef>Выработка</th>
+                <td mat-cell *matCellDef="let row">{{ row.totalOutput | number }} дет.</td>
+              </ng-container>
+              <ng-container matColumnDef="uptimePercent">
+                <th mat-header-cell *matHeaderCellDef>Работа %</th>
+                <td mat-cell *matCellDef="let row">{{ row.uptimePercent }}%</td>
+              </ng-container>
+              <ng-container matColumnDef="downtimeHours">
+                <th mat-header-cell *matHeaderCellDef>Простой</th>
+                <td mat-cell *matCellDef="let row">{{ row.downtimeHours }}ч</td>
+              </ng-container>
+              <ng-container matColumnDef="errorCount">
+                <th mat-header-cell *matHeaderCellDef>Ошибки</th>
+                <td mat-cell *matCellDef="let row">{{ row.errorCount }}</td>
+              </ng-container>
+              <ng-container matColumnDef="efficiency">
+                <th mat-header-cell *matHeaderCellDef>КПД %</th>
+                <td mat-cell *matCellDef="let row">
+                  <span [class.good]="row.efficiency>=85" [class.warn]="row.efficiency<85 && row.efficiency>=70" [class.bad]="row.efficiency<70">
+                    {{ row.efficiency }}%
+                  </span>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="breakdownColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: breakdownColumns;"></tr>
+            </table>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  </div>
+</div>

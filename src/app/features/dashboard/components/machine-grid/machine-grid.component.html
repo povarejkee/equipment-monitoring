@@ -1,0 +1,54 @@
+<div class="grid-toolbar">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Поиск станка</mat-label>
+    <input matInput [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()" placeholder="Название...">
+    <mat-icon matPrefix>search</mat-icon>
+    @if (searchQuery) {
+      <button mat-icon-button matSuffix (click)="searchQuery=''; applyFilters()">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Цех</mat-label>
+    <mat-select [(ngModel)]="selectedLocation" (ngModelChange)="applyFilters()">
+      <mat-option value="">Все цеха</mat-option>
+      @for (loc of locations; track loc) {
+        <mat-option [value]="loc">{{ loc }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Статус</mat-label>
+    <mat-select [(ngModel)]="selectedStatus" (ngModelChange)="applyFilters()">
+      <mat-option value="">Все статусы</mat-option>
+      @for (s of statusOptions; track s.value) {
+        <mat-option [value]="s.value">{{ s.label }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (hasActiveFilters) {
+    <button mat-stroked-button (click)="clearFilters()" class="clear-btn">
+      <mat-icon>filter_alt_off</mat-icon>
+      Сбросить
+    </button>
+  }
+
+  <span class="results-count">{{ filtered.length }} из {{ machines.length }}</span>
+</div>
+
+<div class="machine-grid">
+  @for (machine of filtered; track machine.id) {
+    <app-machine-card [machine]="machine"></app-machine-card>
+  }
+
+  @if (filtered.length === 0) {
+    <div class="empty-state">
+      <mat-icon>search_off</mat-icon>
+      <span>Станки не найдены</span>
+    </div>
+  }
+</div>

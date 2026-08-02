@@ -1,0 +1,109 @@
+.error-log-page {}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.page-title { font-size: 24px; font-weight: 700; color: #212121; margin: 0 0 4px; }
+.page-subtitle { font-size: 14px; color: #757575; margin: 0; }
+
+.export-btn { white-space: nowrap; margin-top: 4px; }
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  .filter-field { width: 180px; }
+}
+
+.results-count { margin-left: auto; font-size: 13px; color: #9E9E9E; }
+
+.table-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  overflow: hidden;
+}
+
+.error-table { width: 100%; }
+
+th.mat-header-cell {
+  font-size: 12px;
+  font-weight: 600;
+  color: #757575;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: #FAFAFA;
+}
+
+td.mat-cell { font-size: 13px; }
+
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.1s;
+  &:hover { background: #F5F5F5; }
+}
+
+.date-primary { display: block; font-weight: 500; color: #212121; }
+.date-time { display: block; font-size: 12px; color: #9E9E9E; }
+
+.error-code {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 600;
+  background: #F5F5F5;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #424242;
+}
+
+.type-chip {
+  font-size: 12px;
+  background: #EDE7F6;
+  color: #4527A0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.desc-cell {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+  white-space: nowrap;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+
+  &.active   { background: #FFEBEE; color: #C62828; }
+  &.resolved { background: #E8F5E9; color: #2E7D32; }
+}
+
+.empty-table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px;
+  color: #BDBDBD;
+
+  mat-icon { font-size: 48px; width: 48px; height: 48px; }
+  span { font-size: 16px; }
+}

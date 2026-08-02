@@ -1,0 +1,57 @@
+<div class="stats-grid">
+  <div class="stat-card total">
+    <div class="stat-icon"><mat-icon>precision_manufacturing</mat-icon></div>
+    <div class="stat-body">
+      <div class="stat-value">{{ total }}</div>
+      <div class="stat-label">Всего станков</div>
+    </div>
+  </div>
+
+  <div class="stat-card running">
+    <div class="stat-icon"><mat-icon>check_circle</mat-icon></div>
+    <div class="stat-body">
+      <div class="stat-value">{{ running }}</div>
+      <div class="stat-label">Работают</div>
+    </div>
+  </div>
+
+  <div class="stat-card warning">
+    <div class="stat-icon"><mat-icon>warning</mat-icon></div>
+    <div class="stat-body">
+      <div class="stat-value">{{ warning }}</div>
+      <div class="stat-label">Предупреждения</div>
+    </div>
+  </div>
+
+  <div class="stat-card error">
+    <div class="stat-icon"><mat-icon>error</mat-icon></div>
+    <div class="stat-body">
+      <div class="stat-value">{{ error }}</div>
+      <div class="stat-label">Ошибки</div>
+    </div>
+  </div>
+
+  <div class="stat-card idle">
+    <div class="stat-icon"><mat-icon>pause_circle</mat-icon></div>
+    <div class="stat-body">
+      <div class="stat-value">{{ idle }}</div>
+      <div class="stat-label">Простой</div>
+    </div>
+  </div>
+
+  <div class="stat-card output">
+    <div class="stat-icon"><mat-icon>inventory_2</mat-icon></div>
+    <div class="stat-body">
+      <div class="stat-value">{{ totalOutput | number }}</div>
+      <div class="stat-label">Дет./час суммарно</div>
+    </div>
+  </div>
+
+  <div class="stat-card load">
+    <div class="stat-icon"><mat-icon>speed</mat-icon></div>
+    <div class="stat-body">
+      <div class="stat-value">{{ avgLoad }}%</div>
+      <div class="stat-label">Средняя нагрузка</div>
+    </div>
+  </div>
+</div>

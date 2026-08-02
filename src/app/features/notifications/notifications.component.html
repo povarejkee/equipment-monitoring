@@ -1,0 +1,123 @@
+<div class="notifications-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Уведомления</h1>
+      <p class="page-subtitle">Алерты и предупреждения по оборудованию</p>
+    </div>
+    <button mat-stroked-button (click)="acknowledgeAll()">
+      <mat-icon>done_all</mat-icon> Подтвердить все
+    </button>
+  </div>
+
+  <mat-tab-group>
+    <!-- Список уведомлений -->
+    <mat-tab label="Уведомления">
+      <div class="tab-content">
+        <div class="filter-bar">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Серьёзность</mat-label>
+            <mat-select [(ngModel)]="filterSeverity" (ngModelChange)="applyFilter()">
+              <mat-option value="">Все</mat-option>
+              @for (s of severities; track s.value) {
+                <mat-option [value]="s.value">{{ s.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Тип</mat-label>
+            <mat-select [(ngModel)]="filterType" (ngModelChange)="applyFilter()">
+              <mat-option value="">Все типы</mat-option>
+              @for (t of types; track t.value) {
+                <mat-option [value]="t.value">{{ t.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <label class="show-acked">
+            <input type="checkbox" [(ngModel)]="showAcknowledged" (ngModelChange)="applyFilter()">
+            Показать подтверждённые
+          </label>
+        </div>
+
+        @if (filteredAlerts$ | async; as alerts) {
+          <div class="alert-list">
+            @for (alert of alerts; track alert.id) {
+              <div class="alert-card" [class]="'sev-' + alert.severity" [class.acknowledged]="alert.acknowledged">
+                <mat-icon class="alert-icon">{{ sevIcon(alert.severity) }}</mat-icon>
+                <div class="alert-body">
+                  <div class="alert-header-row">
+                    <span class="machine-name">{{ alert.machineName }}</span>
+                    <span class="alert-time">{{ alert.timestamp | relativeTime }}</span>
+                  </div>
+                  <div class="alert-message">{{ alert.message }}</div>
+                  @if (alert.metricName !== 'status') {
+                    <div class="alert-values">
+                      Значение: <strong>{{ alert.currentValue | number:'1.1-1' }}</strong>
+                      · Порог: {{ alert.thresholdValue }}
+                    </div>
+                  }
+                </div>
+                <div class="alert-actions">
+                  @if (alert.acknowledged) {
+                    <span class="acked-label"><mat-icon>check_circle</mat-icon> Подтверждено</span>
+                  } @else {
+                    <button mat-stroked-button (click)="acknowledge(alert.id)" class="ack-btn">
+                      <mat-icon>check</mat-icon> Подтвердить
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+            @if (!alerts.length) {
+              <div class="empty-state">
+                <mat-icon>notifications_none</mat-icon>
+                <span>Нет активных уведомлений</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- Настройки порогов — только manager/admin -->
+    <mat-tab label="Настройки порогов" *roleVisible="[UserRole.MANAGER, UserRole.ADMIN]">
+      <div class="tab-content">
+        <p class="thresholds-hint">Настройте пороги для автоматической генерации алертов.</p>
+        @if (editingThresholds.length) {
+          <div class="thresholds-table-wrap">
+            <table class="thresholds-table">
+              <thead>
+                <tr>
+                  <th>Метрика</th>
+                  <th>Единица</th>
+                  <th>⚠ Предупреждение</th>
+                  <th>✕ Критическое</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (t of editingThresholds; track t.metric) {
+                  <tr>
+                    <td class="metric-name">{{ t.label }}</td>
+                    <td class="metric-unit">{{ t.unit }}</td>
+                    <td>
+                      <input class="threshold-input warn" type="number" [(ngModel)]="t.warningValue" min="0">
+                    </td>
+                    <td>
+                      <input class="threshold-input crit" type="number" [(ngModel)]="t.criticalValue" min="0">
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="threshold-actions">
+            <button mat-flat-button color="primary" (click)="saveThresholds()">
+              <mat-icon>save</mat-icon> Сохранить пороги
+            </button>
+          </div>
+        }
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

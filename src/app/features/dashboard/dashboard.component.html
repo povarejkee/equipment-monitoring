@@ -1,0 +1,13 @@
+<div class="dashboard-page">
+  <div class="page-header">
+    <h1 class="page-title">Дашборд</h1>
+    <p class="page-subtitle">Мониторинг производственного оборудования в реальном времени</p>
+  </div>
+
+  @if (machines$ | async; as machines) {
+    <app-stats-summary [machines]="machines"></app-stats-summary>
+    <app-machine-grid [machines]="machines"></app-machine-grid>
+  } @else {
+    <app-loading-spinner></app-loading-spinner>
+  }
+</div>

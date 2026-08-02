@@ -1,0 +1,83 @@
+<div class="settings-page">
+  <div class="page-header">
+    <h1 class="page-title">Настройки</h1>
+    <p class="page-subtitle">Параметры интерфейса и уведомлений</p>
+  </div>
+
+  <div class="settings-layout">
+    <mat-card>
+      <mat-card-header>
+        <mat-icon mat-card-avatar>person</mat-icon>
+        <mat-card-title>Профиль</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="profile-info">
+          <div class="profile-row"><span class="label">Имя</span><span>{{ auth.currentUser?.name }}</span></div>
+          <div class="profile-row"><span class="label">Email</span><span>{{ auth.currentUser?.email }}</span></div>
+          <div class="profile-row"><span class="label">Роль</span>
+            <span class="role-badge">{{ auth.currentUser?.role }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-icon mat-card-avatar>notifications</mat-icon>
+        <mat-card-title>Уведомления</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Email-уведомления</span>
+            <span class="toggle-hint">Получать алерты на email</span>
+          </div>
+          <mat-slide-toggle [(ngModel)]="emailNotifications" color="primary"></mat-slide-toggle>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Звуковые уведомления</span>
+            <span class="toggle-hint">Звуковой сигнал при критических алертах</span>
+          </div>
+          <mat-slide-toggle [(ngModel)]="soundAlerts" color="primary"></mat-slide-toggle>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-icon mat-card-avatar>refresh</mat-icon>
+        <mat-card-title>Обновление данных</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Автообновление</span>
+            <span class="toggle-hint">Обновлять метрики каждые {{ refreshInterval }} сек</span>
+          </div>
+          <mat-slide-toggle [(ngModel)]="autoRefresh" color="primary"></mat-slide-toggle>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-icon mat-card-avatar>info</mat-icon>
+        <mat-card-title>О системе</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="profile-info">
+          <div class="profile-row"><span class="label">Версия</span><span>1.0.0 (v1 — моковые данные)</span></div>
+          <div class="profile-row"><span class="label">Договор</span><span>№1/26 от 27.04.2026</span></div>
+          <div class="profile-row"><span class="label">Следующий этап</span><span>v2 — подключение Go-бэкенда</span></div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="save-bar">
+    <button mat-flat-button color="primary" (click)="save()">
+      <mat-icon>save</mat-icon> Сохранить настройки
+    </button>
+  </div>
+</div>

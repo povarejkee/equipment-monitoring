@@ -1,0 +1,57 @@
+<div class="users-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Управление пользователями</h1>
+      <p class="page-subtitle">Только для администратора</p>
+    </div>
+    <button mat-flat-button color="primary" disabled>
+      <mat-icon>person_add</mat-icon> Добавить пользователя
+      <span class="v2-hint">(v2)</span>
+    </button>
+  </div>
+
+  <mat-card>
+    <table mat-table [dataSource]="users" class="users-table">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Имя</th>
+        <td mat-cell *matCellDef="let user">
+          <div class="user-cell">
+            <div class="user-avatar">{{ user.name[0] }}</div>
+            <span class="user-name">{{ user.name }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef>Роль</th>
+        <td mat-cell *matCellDef="let user">
+          <span class="role-chip" [class]="getRoleColor(user.role)">{{ getRoleLabel(user.role) }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="machines">
+        <th mat-header-cell *matHeaderCellDef>Станки</th>
+        <td mat-cell *matCellDef="let user">
+          @if (user.assignedMachines?.length) {
+            <span class="machines-count">{{ user.assignedMachines.length }} станков</span>
+          } @else {
+            <span class="all-machines">Все станки</span>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </mat-card>
+
+  <p class="v2-note">
+    <mat-icon>info</mat-icon>
+    Создание, редактирование и удаление пользователей будет доступно в версии 2.0 после подключения Go-бэкенда.
+  </p>
+</div>
