@@ -28,6 +28,9 @@ export class MachineGridComponent implements OnChanges {
   selectedStatus = '';
 
   filtered: Machine[] = [];
+  // Was a getter allocating+sorting a Set on every template read (bound in
+  // an @for) — now computed once per input change, same as `filtered`.
+  locations: string[] = [];
 
   readonly statusOptions = [
     { value: MachineStatus.RUNNING, label: 'Работает' },
@@ -38,11 +41,10 @@ export class MachineGridComponent implements OnChanges {
     { value: MachineStatus.OFFLINE, label: 'Нет связи' },
   ];
 
-  get locations(): string[] {
-    return [...new Set(this.machines.map(m => m.location))].sort();
+  ngOnChanges(): void {
+    this.locations = [...new Set(this.machines.map(m => m.location))].sort();
+    this.applyFilters();
   }
-
-  ngOnChanges(): void { this.applyFilters(); }
 
   applyFilters(): void {
     this.filtered = this.machines.filter(m => {

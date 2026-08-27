@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -21,7 +21,7 @@ interface MetricItem {
   templateUrl: './metrics-panel.component.html',
   styleUrls: ['./metrics-panel.component.scss']
 })
-export class MetricsPanelComponent {
+export class MetricsPanelComponent implements OnChanges {
   @Input() metrics!: MachineMetrics;
   @Input() machineType!: MachineType;
 
@@ -35,8 +35,10 @@ export class MetricsPanelComponent {
     { key: 'spindleSpeed', label: 'Обороты шпинделя', unit: 'об/мин', icon: 'rotate_right' },
   ];
 
-  get visibleMetrics(): MetricItem[] {
-    return this.allMetrics.filter(m => this.metrics[m.key] !== undefined);
+  visibleMetrics: MetricItem[] = [];
+
+  ngOnChanges(): void {
+    this.visibleMetrics = this.allMetrics.filter(m => this.metrics[m.key] !== undefined);
   }
 
   getLevel(item: MetricItem): 'normal' | 'warning' | 'critical' {

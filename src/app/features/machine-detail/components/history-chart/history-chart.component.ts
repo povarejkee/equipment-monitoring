@@ -1,14 +1,18 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, DestroyRef, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartDataset } from 'chart.js';
+import { Subject, switchMap } from 'rxjs';
 import { MetricHistoryPoint } from '../../../../core/models/machine.model';
 import { MachineService } from '../../../../core/services/machine.service';
 
 type Period = '1h' | '6h' | '24h' | '7d' | '30d';
+
+const HOURS_BY_PERIOD: Record<Period, number> = { '1h': 1, '6h': 6, '24h': 24, '7d': 168, '30d': 720 };
 
 @Component({
   selector: 'app-history-chart',
@@ -42,19 +46,32 @@ export class HistoryChartComponent implements OnChanges {
   };
 
   private history: MetricHistoryPoint[] = [];
+  private destroyRef = inject(DestroyRef);
+  /**
+   * Period switches go through switchMap so a slower earlier request can
+   * never land after (and overwrite the chart with) a newer one — the
+   * previous fix here was a bare subscribe() per click with no
+   * cancellation, so rapidly toggling periods could render one period's
+   * data with another period's axis formatting/decimation.
+   */
+  private periodRequest$ = new Subject<Period>();
 
-  constructor(private machineService: MachineService) {}
+  constructor(private machineService: MachineService) {
+    this.periodRequest$.pipe(
+      switchMap(period => this.machineService.getHistory(this.machineId, HOURS_BY_PERIOD[period])),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(pts => {
+      this.history = pts;
+      this.buildChart();
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['machineId'] && this.machineId) this.loadData();
   }
 
   loadData(): void {
-    const hoursMap: Record<Period, number> = { '1h': 1, '6h': 6, '24h': 24, '7d': 168, '30d': 720 };
-    this.machineService.getHistory(this.machineId, hoursMap[this.period]).subscribe(pts => {
-      this.history = pts;
-      this.buildChart();
-    });
+    this.periodRequest$.next(this.period);
   }
 
   buildChart(): void {

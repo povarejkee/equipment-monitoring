@@ -104,11 +104,18 @@
           class="clickable-row" (click)="openDetail(row)"></tr>
     </table>
 
-    @if (dataSource.filteredData.length === 0) {
+    @if (loadFailed) {
+      <div class="empty-table error">
+        <mat-icon>cloud_off</mat-icon>
+        <span>Не удалось загрузить журнал ошибок</span>
+      </div>
+    } @else if (dataSource.filteredData.length === 0) {
       <div class="empty-table">
         <mat-icon>check_circle_outline</mat-icon>
         <span>Ошибок не найдено</span>
       </div>
     }
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" [pageSize]="25" showFirstLastButtons></mat-paginator>
   </div>
 </div>

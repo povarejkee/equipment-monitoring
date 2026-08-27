@@ -106,4 +106,6 @@ td.mat-cell { font-size: 13px; }
 
   mat-icon { font-size: 48px; width: 48px; height: 48px; }
   span { font-size: 16px; }
+
+  &.error { color: #F44336; }
 }

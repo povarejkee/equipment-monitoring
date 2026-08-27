@@ -32,8 +32,11 @@ import { MachineService } from '../../../../core/services/machine.service';
         <tr mat-header-row *matHeaderRowDef="cols"></tr>
         <tr mat-row *matRowDef="let row; columns: cols;"></tr>
       </table>
-      @if (!downtimes.length) {
+      @if (!downtimes.length && !loadFailed) {
         <div class="empty">Простоев не зафиксировано</div>
+      }
+      @if (loadFailed) {
+        <div class="empty error">Не удалось загрузить лог простоев</div>
       }
     </div>
   `,
@@ -44,18 +47,23 @@ import { MachineService } from '../../../../core/services/machine.service';
     table { font-size:13px; }
     th.mat-header-cell { color:#757575; font-size:12px; font-weight:600; }
     .empty { text-align:center; padding:24px; color:#9E9E9E; font-size:14px; }
+    .empty.error { color:#F44336; }
   `]
 })
 export class DowntimeLogComponent implements OnInit {
   @Input() machineId!: string;
   downtimes: DowntimeEntry[] = [];
+  loadFailed = false;
   cols = ['startTime', 'endTime', 'duration', 'reason'];
 
   constructor(private machineService: MachineService) {}
 
   ngOnInit(): void {
     if (this.machineId) {
-      this.machineService.getDowntimes(this.machineId).subscribe(d => this.downtimes = d);
+      this.machineService.getDowntimes(this.machineId).subscribe({
+        next: d => { this.downtimes = d; this.loadFailed = false; },
+        error: () => { this.loadFailed = true; },
+      });
     }
   }
 }

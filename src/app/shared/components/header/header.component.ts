@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { AsyncPipe } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { AlertService } from '../../../core/services/alert.service';
+import { WebSocketService } from '../../../core/services/websocket.service';
 
 @Component({
   selector: 'app-header',
@@ -22,9 +23,14 @@ export class HeaderComponent {
   @Output() menuToggle = new EventEmitter<void>();
 
   unreadCount$!: Observable<number>;
+  /** False while the live socket is down — the dashboard otherwise
+   * silently freezes on the last snapshot with no indication anything's
+   * wrong (an operator could be looking at hours-old "live" metrics). */
+  connected$: Observable<boolean>;
 
-  constructor(public auth: AuthService, private alertService: AlertService) {
+  constructor(public auth: AuthService, private alertService: AlertService, ws: WebSocketService) {
     this.unreadCount$ = this.alertService.getUnacknowledgedCount();
+    this.connected$ = ws.connected$;
   }
 
   logout(): void {

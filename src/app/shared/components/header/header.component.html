@@ -7,6 +7,12 @@
   </div>
 
   <div class="header-right">
+    @if ((connected$ | async) === false) {
+      <span class="conn-status" matTooltip="Нет связи с сервером — данные могут быть устаревшими">
+        <mat-icon>cloud_off</mat-icon> Нет связи
+      </span>
+    }
+
     <button mat-icon-button
             [routerLink]="['/notifications']"
             matTooltip="Уведомления"

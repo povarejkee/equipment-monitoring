@@ -1,6 +1,8 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
+import { combineLatest } from 'rxjs';
 import { Alert, AlertSeverity } from '../../../../core/models/alert.model';
 import { AlertService } from '../../../../core/services/alert.service';
 import { RelativeTimePipe } from '../../../../shared/pipes/relative-time.pipe';
@@ -25,8 +27,11 @@ import { RelativeTimePipe } from '../../../../shared/pipes/relative-time.pipe';
             }
           </div>
         }
-        @if (!alerts.length) {
+        @if (!alerts.length && !loadFailed) {
           <div class="empty">Алертов нет</div>
+        }
+        @if (loadFailed) {
+          <div class="empty error">Не удалось загрузить алерты</div>
         }
       </div>
     </div>
@@ -46,18 +51,26 @@ import { RelativeTimePipe } from '../../../../shared/pipes/relative-time.pipe';
     .alert-meta { font-size:11px; color:#9E9E9E; margin-top:2px; }
     .ack-icon { font-size:18px; width:18px; height:18px; color:#4CAF50; margin-left:auto; flex-shrink:0; }
     .empty { text-align:center; padding:20px; color:#9E9E9E; font-size:14px; }
+    .empty.error { color:#F44336; }
   `]
 })
 export class AlertHistoryComponent implements OnInit {
   @Input() machineId!: string;
   alerts: Alert[] = [];
+  loadFailed = false;
+
+  private destroyRef = inject(DestroyRef);
 
   constructor(private alertService: AlertService) {}
 
   ngOnInit(): void {
-    if (this.machineId) {
-      this.alertService.getForMachine(this.machineId).subscribe(a => this.alerts = a.slice(0, 10));
-    }
+    if (!this.machineId) return;
+    combineLatest([this.alertService.getForMachine(this.machineId), this.alertService.alertsFailed$])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(([alerts, failed]) => {
+        this.alerts = alerts.slice(0, 10);
+        this.loadFailed = failed;
+      });
   }
 
   sevIcon(sev: AlertSeverity): string {

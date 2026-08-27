@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Machine, MachineStatus } from '../../../../core/models/machine.model';
@@ -10,25 +10,52 @@ import { Machine, MachineStatus } from '../../../../core/models/machine.model';
   templateUrl: './stats-summary.component.html',
   styleUrls: ['./stats-summary.component.scss']
 })
-export class StatsSummaryComponent {
+export class StatsSummaryComponent implements OnChanges {
   @Input() machines: Machine[] = [];
 
-  get total() { return this.machines.length; }
-  get running() { return this.machines.filter(m => m.status === MachineStatus.RUNNING).length; }
-  get warning() { return this.machines.filter(m => m.status === MachineStatus.WARNING).length; }
-  get error() { return this.machines.filter(m => m.status === MachineStatus.ERROR).length; }
-  get idle() { return this.machines.filter(m => m.status === MachineStatus.IDLE).length; }
-  get maintenance() { return this.machines.filter(m => m.status === MachineStatus.MAINTENANCE).length; }
-  get offline() { return this.machines.filter(m => m.status === MachineStatus.OFFLINE).length; }
+  // Computed once per input change instead of on every template read —
+  // these were getters bound directly in the template, so 7 filter passes
+  // plus 2 reduces ran on every change-detection cycle (every WS tick,
+  // every mousemove/scroll), not just when `machines` actually changed.
+  total = 0;
+  running = 0;
+  warning = 0;
+  error = 0;
+  idle = 0;
+  maintenance = 0;
+  offline = 0;
+  totalOutput = 0;
+  avgLoad = 0;
 
-  get totalOutput() {
-    return this.machines.reduce((s, m) => s + m.metrics.output, 0);
-  }
+  ngOnChanges(): void {
+    this.total = this.machines.length;
+    this.running = 0;
+    this.warning = 0;
+    this.error = 0;
+    this.idle = 0;
+    this.maintenance = 0;
+    this.offline = 0;
+    this.totalOutput = 0;
 
-  get avgLoad() {
-    if (!this.machines.length) return 0;
-    const running = this.machines.filter(m => m.status === MachineStatus.RUNNING || m.status === MachineStatus.WARNING);
-    if (!running.length) return 0;
-    return Math.round(running.reduce((s, m) => s + m.metrics.load, 0) / running.length);
+    let runningLoadSum = 0;
+    let runningCount = 0;
+
+    for (const m of this.machines) {
+      switch (m.status) {
+        case MachineStatus.RUNNING: this.running++; break;
+        case MachineStatus.WARNING: this.warning++; break;
+        case MachineStatus.ERROR: this.error++; break;
+        case MachineStatus.IDLE: this.idle++; break;
+        case MachineStatus.MAINTENANCE: this.maintenance++; break;
+        case MachineStatus.OFFLINE: this.offline++; break;
+      }
+      this.totalOutput += m.metrics.output;
+      if (m.status === MachineStatus.RUNNING || m.status === MachineStatus.WARNING) {
+        runningLoadSum += m.metrics.load;
+        runningCount++;
+      }
+    }
+
+    this.avgLoad = runningCount ? Math.round(runningLoadSum / runningCount) : 0;
   }
 }

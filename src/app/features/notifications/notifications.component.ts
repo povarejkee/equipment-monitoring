@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -57,6 +58,8 @@ export class NotificationsComponent implements OnInit {
 
   editingThresholds: AlertThreshold[] = [];
 
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     public alertService: AlertService,
     public auth: AuthService,
@@ -66,7 +69,7 @@ export class NotificationsComponent implements OnInit {
   ngOnInit(): void {
     this.allAlerts$ = this.alertService.getAll();
     this.thresholds$ = this.alertService.thresholds$;
-    this.alertService.thresholds$.subscribe(t => {
+    this.alertService.thresholds$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(t => {
       this.editingThresholds = t.map(x => ({ ...x }));
     });
     this.applyFilter();

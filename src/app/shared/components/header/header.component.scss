@@ -36,6 +36,21 @@
   &:hover { color: #1976D2; }
 }
 
+.conn-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #FFEBEE;
+  color: #C62828;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
 .user-btn {
   display: flex;
   align-items: center;

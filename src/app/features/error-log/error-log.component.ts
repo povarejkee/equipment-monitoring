@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -30,7 +31,7 @@ const TYPE_LABELS: Record<ErrorType, string> = {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    MatTableModule, MatSortModule, MatFormFieldModule, MatInputModule,
+    MatTableModule, MatSortModule, MatPaginatorModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatChipsModule,
     MatDialogModule, MatTooltipModule
   ],
@@ -39,6 +40,7 @@ const TYPE_LABELS: Record<ErrorType, string> = {
 })
 export class ErrorLogComponent implements OnInit {
   @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   dataSource = new MatTableDataSource<ErrorLogEntry>();
   displayedColumns = ['timestamp', 'machineName', 'errorCode', 'errorType', 'description', 'status', 'duration'];
@@ -46,6 +48,9 @@ export class ErrorLogComponent implements OnInit {
   filterStatus = '';
   filterType = '';
   filterMachine = '';
+  /** Distinct from "no rows match the filters" — a failed request must not
+   * read as "no errors, everything's fine" on a safety-monitoring page. */
+  loadFailed = false;
 
   readonly typeOptions = Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }));
   machines: string[] = [];
@@ -54,13 +59,18 @@ export class ErrorLogComponent implements OnInit {
   constructor(private errorLogService: ErrorLogService, private dialog: MatDialog) {}
 
   ngOnInit(): void {
-    this.errorLogService.getAll().subscribe(entries => {
-      this.dataSource.data = entries;
-      this.machines = [...new Set(entries.map(e => e.machineName))].sort();
-      setTimeout(() => {
-        this.dataSource.sort = this.sort;
-        this.applyFilters();
-      });
+    this.errorLogService.getAll().subscribe({
+      next: entries => {
+        this.loadFailed = false;
+        this.dataSource.data = entries;
+        this.machines = [...new Set(entries.map(e => e.machineName))].sort();
+        setTimeout(() => {
+          this.dataSource.sort = this.sort;
+          this.dataSource.paginator = this.paginator;
+          this.applyFilters();
+        });
+      },
+      error: () => { this.loadFailed = true; },
     });
 
     this.dataSource.filterPredicate = (row, filter) => {
@@ -99,11 +109,21 @@ export class ErrorLogComponent implements OnInit {
 
   getTypeLabel(type: string): string { return TYPE_LABELS[type as ErrorType] ?? type; }
 
+  /** RFC4180-style quoting: wrap any field containing the delimiter, a
+   * quote, or a newline, and double up embedded quotes. Free-text fields
+   * like `description`/`impact` come straight from the backend and can
+   * contain any of those — without this, one semicolon in a description
+   * silently shifts every following column. */
+  private csvField(value: string | number): string {
+    const s = String(value);
+    return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  }
+
   exportCsv(): void {
     const rows = this.dataSource.filteredData;
     const headers = ['Дата', 'Станок', 'Код', 'Тип', 'Описание', 'Статус', 'Простой (мин)'];
     const csv = [
-      headers.join(';'),
+      headers.map(h => this.csvField(h)).join(';'),
       ...rows.map(r => [
         new Date(r.timestamp).toLocaleString('ru'),
         r.machineName,
@@ -112,13 +132,15 @@ export class ErrorLogComponent implements OnInit {
         r.description,
         r.resolvedAt ? 'Решена' : 'Активна',
         r.duration ?? ''
-      ].join(';'))
+      ].map(v => this.csvField(v)).join(';'))
     ].join('\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = url;
     a.download = `errors-${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
+    URL.revokeObjectURL(url);
   }
 
   get hasFilters(): boolean {
