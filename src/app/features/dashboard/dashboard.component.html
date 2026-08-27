@@ -4,10 +4,16 @@
     <p class="page-subtitle">Мониторинг производственного оборудования в реальном времени</p>
   </div>
 
-  @if (machines$ | async; as machines) {
-    <app-stats-summary [machines]="machines"></app-stats-summary>
-    <app-machine-grid [machines]="machines"></app-machine-grid>
-  } @else {
-    <app-loading-spinner></app-loading-spinner>
+  @if (state$ | async; as state) {
+    @if (state.status === 'loaded') {
+      <app-stats-summary [machines]="state.machines"></app-stats-summary>
+      <app-machine-grid [machines]="state.machines"></app-machine-grid>
+    } @else if (state.status === 'error') {
+      <div class="load-error">
+        <span>Не удалось загрузить список станков.</span>
+      </div>
+    } @else {
+      <app-loading-spinner></app-loading-spinner>
+    }
   }
 </div>

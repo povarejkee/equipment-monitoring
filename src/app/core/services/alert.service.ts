@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, concat, of } from 'rxjs';
+import { last, map, tap } from 'rxjs/operators';
 import { Alert, AlertThreshold } from '../models/alert.model';
 import { environment } from '../../../environments/environment';
 
@@ -13,6 +13,10 @@ export class AlertService {
   private thresholdsSubject = new BehaviorSubject<AlertThreshold[]>([]);
   thresholds$ = this.thresholdsSubject.asObservable();
 
+  /** True when the last /alerts fetch failed — an empty list is NOT the same as a failure. */
+  private alertsFailedSubject = new BehaviorSubject<boolean>(false);
+  alertsFailed$ = this.alertsFailedSubject.asObservable();
+
   private loaded = false;
 
   constructor(private http: HttpClient) {}
@@ -22,12 +26,33 @@ export class AlertService {
     this.loaded = true;
     this.refresh();
     this.http.get<AlertThreshold[]>(`${environment.apiUrl}/thresholds`)
-      .subscribe((t) => this.thresholdsSubject.next(t));
+      .subscribe({
+        next: (t) => this.thresholdsSubject.next(t),
+        error: () => this.thresholdsSubject.next([]),
+      });
   }
 
   private refresh(): void {
     this.http.get<Alert[]>(`${environment.apiUrl}/alerts`)
-      .subscribe((a) => this.alertsSubject.next(a));
+      .subscribe({
+        next: (a) => {
+          this.alertsFailedSubject.next(false);
+          this.alertsSubject.next(a);
+        },
+        error: () => {
+          // Let the next ensureLoaded() retry instead of caching a failed load.
+          this.loaded = false;
+          this.alertsFailedSubject.next(true);
+        },
+      });
+  }
+
+  /** Drops the cached alerts so the next user never sees the previous one's data. */
+  reset(): void {
+    this.loaded = false;
+    this.alertsSubject.next([]);
+    this.thresholdsSubject.next([]);
+    this.alertsFailedSubject.next(false);
   }
 
   getAll(): Observable<Alert[]> {
@@ -52,16 +77,31 @@ export class AlertService {
 
   acknowledge(id: string): void {
     this.http.post<Alert[]>(`${environment.apiUrl}/alerts/${id}/acknowledge`, {})
-      .subscribe((alerts) => this.alertsSubject.next(alerts));
+      .subscribe({ next: (alerts) => this.alertsSubject.next(alerts), error: () => {} });
   }
 
   acknowledgeAll(): void {
     this.http.post<Alert[]>(`${environment.apiUrl}/alerts/acknowledge-all`, {})
-      .subscribe((alerts) => this.alertsSubject.next(alerts));
+      .subscribe({ next: (alerts) => this.alertsSubject.next(alerts), error: () => {} });
   }
 
-  updateThreshold(metric: string, warningValue: number, criticalValue: number): void {
-    this.http.put<AlertThreshold[]>(`${environment.apiUrl}/thresholds`, { metric, warningValue, criticalValue })
-      .subscribe((t) => this.thresholdsSubject.next(t));
+  /**
+   * Persists thresholds one at a time. The endpoint takes a single metric and
+   * answers with the whole list, so parallel PUTs would clobber each other —
+   * `concat` sequences them and only the last response is applied.
+   */
+  saveThresholds(thresholds: AlertThreshold[]): Observable<AlertThreshold[]> {
+    if (!thresholds.length) return of([]);
+    const puts = thresholds.map((t) =>
+      this.http.put<AlertThreshold[]>(`${environment.apiUrl}/thresholds`, {
+        metric: t.metric,
+        warningValue: t.warningValue,
+        criticalValue: t.criticalValue,
+      })
+    );
+    return concat(...puts).pipe(
+      last(),
+      tap((updated) => this.thresholdsSubject.next(updated))
+    );
   }
 }

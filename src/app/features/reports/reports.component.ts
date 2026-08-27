@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, take } from 'rxjs';
 import { FormsModule, ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -35,9 +36,13 @@ import { Machine } from '../../core/models/machine.model';
   styleUrls: ['./reports.component.scss']
 })
 export class ReportsComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+
   machines: Machine[] = [];
+  machinesFailed = false;
   reportData: ReportData | null = null;
   loading = false;
+  reportFailed = false;
 
   params: ReportParams = {
     dateFrom: new Date(Date.now() - 7 * 86400000),
@@ -67,23 +72,38 @@ export class ReportsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Take the machine list once (first populated snapshot) — the report
-    // must not regenerate on every live WebSocket tick.
-    this.machineService.getAll().pipe(
-      filter(m => m.length > 0),
-      take(1)
-    ).subscribe(m => {
-      this.machines = m;
+    // Take the machine list once it has settled — the report must not
+    // regenerate on every live WebSocket tick. An empty list is a valid
+    // settled result, so it must not block the report either.
+    this.machineService.getState().pipe(
+      filter(state => state.status !== 'loading'),
+      take(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(state => {
+      this.machines = state.status === 'loaded' ? state.machines : [];
+      this.machinesFailed = state.status === 'error';
       this.generate();
     });
   }
 
   generate(): void {
     this.loading = true;
-    this.reportService.generate(this.params).subscribe(data => {
-      this.reportData = data;
-      this.buildChart(data);
-      this.loading = false;
+    this.reportFailed = false;
+    this.reportService.generate(this.params).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: data => {
+        this.reportData = data;
+        this.buildChart(data);
+        this.loading = false;
+      },
+      error: () => {
+        // Must reset, or the progress bar stays up and the retry button
+        // ([disabled]="loading") is disabled forever.
+        this.loading = false;
+        this.reportFailed = true;
+        this.snack.open('Не удалось сформировать отчёт. Попробуйте ещё раз.', 'OK', { duration: 5000 });
+      },
     });
   }
 

@@ -1,9 +1,12 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, Injector, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { User, UserRole, AuthState } from '../models/user.model';
 import { environment } from '../../../environments/environment';
+import { WebSocketService } from './websocket.service';
+import { MachineService } from './machine.service';
+import { AlertService } from './alert.service';
 
 interface LoginResponse {
   token: string;
@@ -17,7 +20,7 @@ export class AuthService {
 
   readonly authState = signal<AuthState>({ user: null, token: null, isAuthenticated: false });
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(private http: HttpClient, private router: Router, private injector: Injector) {
     this.restoreSession();
   }
 
@@ -48,11 +51,24 @@ export class AuthService {
     );
   }
 
+  /**
+   * Idempotent: N parallel 401s all land here, but only the first one that
+   * actually had a session to tear down navigates.
+   */
   logout(): void {
+    const hadSession = this.isAuthenticated || localStorage.getItem(this.TOKEN_KEY) !== null;
+
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.authState.set({ user: null, token: null, isAuthenticated: false });
-    this.router.navigate(['/login']);
+
+    // Close the live socket and drop every cached snapshot, so the next user
+    // never inherits this one's machines/alerts.
+    this.injector.get(WebSocketService).disconnect();
+    this.injector.get(MachineService).reset();
+    this.injector.get(AlertService).reset();
+
+    if (hadSession) this.router.navigate(['/login']);
   }
 
   hasRole(role: UserRole | UserRole[]): boolean {
@@ -72,13 +88,36 @@ export class AuthService {
   private restoreSession(): void {
     const token = localStorage.getItem(this.TOKEN_KEY);
     const userStr = localStorage.getItem(this.USER_KEY);
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr) as User;
-        this.authState.set({ user, token, isAuthenticated: true });
-      } catch {
-        this.logout();
-      }
+    if (!token || !userStr) return;
+
+    let user: User;
+    try {
+      user = JSON.parse(userStr) as User;
+    } catch {
+      this.logout();
+      return;
     }
+    // Optimistic so guards resolve without a round-trip, but not trusted:
+    // the stored token may be expired or revoked, so ask the server.
+    this.authState.set({ user, token, isAuthenticated: true });
+    // Deferred — issuing the request from the constructor would re-enter
+    // AuthService through authInterceptor while it is still being built.
+    queueMicrotask(() => this.validateSession());
+  }
+
+  /** Confirms the restored token is still valid; drops the session if it isn't. */
+  private validateSession(): void {
+    this.http.get<User>(`${environment.apiUrl}/auth/me`).subscribe({
+      next: (user) => {
+        if (!this.isAuthenticated) return;
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        this.authState.set({ user, token: this.token, isAuthenticated: true });
+      },
+      error: (err) => {
+        // Only a rejection invalidates the session — a network/cold-start
+        // failure must not log the user out.
+        if (err?.status === 401 || err?.status === 403) this.logout();
+      },
+    });
   }
 }

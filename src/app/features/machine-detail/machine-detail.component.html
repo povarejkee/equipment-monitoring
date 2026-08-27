@@ -1,38 +1,57 @@
-@if (machine$ | async; as machine) {
-  <div class="detail-page">
-    <div class="page-header">
-      <a class="back-link" routerLink="/dashboard">
-        <mat-icon>arrow_back</mat-icon> Назад
-      </a>
-      <div class="machine-headline">
-        <div class="machine-title-row">
-          <h1 class="machine-name">{{ machine.name }}</h1>
-          <app-status-badge [status]="machine.status"></app-status-badge>
-        </div>
-        <div class="machine-meta">
-          <span><mat-icon>category</mat-icon> {{ typeLabels[machine.type] }}</span>
-          <span><mat-icon>location_on</mat-icon> {{ machine.location }}</span>
-          <span><mat-icon>schedule</mat-icon> Работа: {{ machine.metrics.uptime }}ч</span>
-          <span class="last-updated"><mat-icon>sync</mat-icon> Обновлено: {{ machine.lastUpdated | date:'HH:mm:ss' }}</span>
+@if (lookup$ | async; as lookup) {
+  @if (lookup.status === 'found') {
+    <div class="detail-page">
+      <div class="page-header">
+        <a class="back-link" routerLink="/dashboard">
+          <mat-icon>arrow_back</mat-icon> Назад
+        </a>
+        <div class="machine-headline">
+          <div class="machine-title-row">
+            <h1 class="machine-name">{{ lookup.machine.name }}</h1>
+            <app-status-badge [status]="lookup.machine.status"></app-status-badge>
+          </div>
+          <div class="machine-meta">
+            <span><mat-icon>category</mat-icon> {{ typeLabels[lookup.machine.type] }}</span>
+            <span><mat-icon>location_on</mat-icon> {{ lookup.machine.location }}</span>
+            <span><mat-icon>schedule</mat-icon> Работа: {{ lookup.machine.metrics.uptime }}ч</span>
+            <span class="last-updated"><mat-icon>sync</mat-icon> Обновлено: {{ lookup.machine.lastUpdated | date:'HH:mm:ss' }}</span>
+          </div>
         </div>
       </div>
+
+      <section class="section">
+        <h2 class="section-heading">Метрики в реальном времени</h2>
+        <app-metrics-panel [metrics]="lookup.machine.metrics" [machineType]="lookup.machine.type"></app-metrics-panel>
+      </section>
+
+      <section class="section">
+        <h2 class="section-heading">История метрик</h2>
+        <app-history-chart [machineId]="lookup.machine.id"></app-history-chart>
+      </section>
+
+      <div class="two-col">
+        <app-downtime-log [machineId]="lookup.machine.id"></app-downtime-log>
+        <app-alert-history [machineId]="lookup.machine.id"></app-alert-history>
+      </div>
     </div>
-
-    <section class="section">
-      <h2 class="section-heading">Метрики в реальном времени</h2>
-      <app-metrics-panel [metrics]="machine.metrics" [machineType]="machine.type"></app-metrics-panel>
-    </section>
-
-    <section class="section">
-      <h2 class="section-heading">История метрик</h2>
-      <app-history-chart [machineId]="machine.id"></app-history-chart>
-    </section>
-
-    <div class="two-col">
-      <app-downtime-log [machineId]="machine.id"></app-downtime-log>
-      <app-alert-history [machineId]="machine.id"></app-alert-history>
+  } @else if (lookup.status === 'loading') {
+    <app-loading-spinner></app-loading-spinner>
+  } @else {
+    <div class="detail-page">
+      <div class="page-header">
+        <a class="back-link" routerLink="/dashboard">
+          <mat-icon>arrow_back</mat-icon> Назад
+        </a>
+      </div>
+      <div class="detail-empty">
+        <mat-icon>{{ lookup.status === 'error' ? 'cloud_off' : 'search_off' }}</mat-icon>
+        @if (lookup.status === 'error') {
+          <span>Не удалось загрузить данные станка.</span>
+        } @else {
+          <span>Станок не найден.</span>
+        }
+        <a mat-stroked-button routerLink="/dashboard">К списку станков</a>
+      </div>
     </div>
-  </div>
-} @else {
-  <app-loading-spinner></app-loading-spinner>
+  }
 }

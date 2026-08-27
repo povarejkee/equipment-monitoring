@@ -4,8 +4,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Observable, switchMap } from 'rxjs';
-import { Machine } from '../../core/models/machine.model';
-import { MachineService } from '../../core/services/machine.service';
+import { MachineService, MachineLookup } from '../../core/services/machine.service';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { MetricsPanelComponent } from './components/metrics-panel/metrics-panel.component';
 import { HistoryChartComponent } from './components/history-chart/history-chart.component';
@@ -25,7 +24,7 @@ import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner
   styleUrls: ['./machine-detail.component.scss']
 })
 export class MachineDetailComponent implements OnInit {
-  machine$!: Observable<Machine | undefined>;
+  lookup$!: Observable<MachineLookup>;
 
   readonly typeLabels: Record<string, string> = {
     cnc: 'ЧПУ', lathe: 'Токарный', milling: 'Фрезерный',
@@ -35,7 +34,7 @@ export class MachineDetailComponent implements OnInit {
   constructor(private route: ActivatedRoute, private machineService: MachineService) {}
 
   ngOnInit(): void {
-    this.machine$ = this.route.paramMap.pipe(
+    this.lookup$ = this.route.paramMap.pipe(
       switchMap(params => this.machineService.getById(params.get('id')!))
     );
   }

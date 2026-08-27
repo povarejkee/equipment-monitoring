@@ -42,6 +42,11 @@
 
         <p class="machine-select-label">Станки (пусто = все):</p>
         <div class="machine-checklist">
+          @if (machinesFailed) {
+            <p class="checklist-note error">Не удалось загрузить список станков.</p>
+          } @else if (!machines.length) {
+            <p class="checklist-note">Станки не найдены — отчёт строится по всем данным.</p>
+          }
           @for (m of machines; track m.id) {
             <mat-checkbox
               [checked]="isMachineSelected(m.id)"
@@ -63,6 +68,17 @@
     <div class="report-results">
       @if (loading) {
         <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+
+      @if (!loading && !reportData) {
+        <div class="report-placeholder" [class.error]="reportFailed">
+          <mat-icon>{{ reportFailed ? 'error_outline' : 'assessment' }}</mat-icon>
+          @if (reportFailed) {
+            <span>Не удалось сформировать отчёт. Нажмите «Сформировать», чтобы повторить.</span>
+          } @else {
+            <span>Задайте параметры и нажмите «Сформировать».</span>
+          }
+        </div>
       }
 
       @if (reportData) {

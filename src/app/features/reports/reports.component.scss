@@ -83,3 +83,25 @@ th.mat-header-cell { font-size: 12px; font-weight: 600; color: #757575; backgrou
 .good { color: #2E7D32; font-weight: 600; }
 .warn { color: #E65100; font-weight: 600; }
 .bad  { color: #C62828; font-weight: 600; }
+
+.checklist-note {
+  font-size: 13px;
+  color: #9E9E9E;
+  margin: 0 0 8px;
+
+  &.error { color: #C62828; }
+}
+
+.report-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: #9E9E9E;
+
+  mat-icon { font-size: 48px; width: 48px; height: 48px; color: #BDBDBD; }
+  span { font-size: 15px; text-align: center; }
+
+  &.error { color: #C62828; mat-icon { color: #EF9A9A; } }
+}

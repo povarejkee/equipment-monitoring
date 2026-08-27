@@ -93,10 +93,10 @@ export class NotificationsComponent implements OnInit {
   }
 
   saveThresholds(): void {
-    this.editingThresholds.forEach(t => {
-      this.alertService.updateThreshold(t.metric, t.warningValue, t.criticalValue);
+    this.alertService.saveThresholds(this.editingThresholds).subscribe({
+      next: () => this.snack.open('Пороги сохранены', '', { duration: 2000 }),
+      error: () => this.snack.open('Не удалось сохранить пороги', '', { duration: 3000 }),
     });
-    this.snack.open('Пороги сохранены', '', { duration: 2000 });
   }
 
   sevIcon(sev: AlertSeverity): string {

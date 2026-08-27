@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { Observable, map } from 'rxjs';
-import { Machine } from '../../core/models/machine.model';
-import { MachineService } from '../../core/services/machine.service';
+import { MachineService, MachinesState } from '../../core/services/machine.service';
 import { AuthService } from '../../core/services/auth.service';
 import { UserRole } from '../../core/models/user.model';
 import { StatsSummaryComponent } from './components/stats-summary/stats-summary.component';
@@ -17,18 +16,19 @@ import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
-  machines$!: Observable<Machine[]>;
+  state$!: Observable<MachinesState>;
 
   constructor(private machineService: MachineService, private auth: AuthService) {}
 
   ngOnInit(): void {
-    this.machines$ = this.machineService.getAll().pipe(
-      map(machines => {
+    this.state$ = this.machineService.getState().pipe(
+      map((state): MachinesState => {
+        if (state.status !== 'loaded') return state;
         const user = this.auth.currentUser;
         if (user?.role === UserRole.OPERATOR && user.assignedMachines?.length) {
-          return machines.filter(m => user.assignedMachines!.includes(m.id));
+          return { status: 'loaded', machines: state.machines.filter(m => user.assignedMachines!.includes(m.id)) };
         }
-        return machines;
+        return state;
       })
     );
   }
