@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, take } from 'rxjs';
@@ -17,6 +17,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { ReportData, ReportParams } from '../../core/models/report.model';
 import { ReportService } from '../../core/services/report.service';
 import { MachineService } from '../../core/services/machine.service';
@@ -37,6 +39,8 @@ import { Machine } from '../../core/models/machine.model';
 })
 export class ReportsComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
+
+  @ViewChild(BaseChartDirective) chartDirective?: BaseChartDirective;
 
   machines: Machine[] = [];
   machinesFailed = false;
@@ -108,7 +112,72 @@ export class ReportsComponent implements OnInit {
   }
 
   exportPdf(): void {
-    this.snack.open('Экспорт в PDF будет доступен в версии 2.0', 'OK', { duration: 3000 });
+    if (!this.reportData) return;
+    const data = this.reportData;
+    const doc = new jsPDF();
+    const marginX = 14;
+
+    doc.setFontSize(16);
+    doc.text('Отчёт по производительности оборудования', marginX, 18);
+    doc.setFontSize(10);
+    doc.setTextColor(120);
+    doc.text(
+      `Период: ${this.formatDateShort(data.params.dateFrom)} — ${this.formatDateShort(data.params.dateTo)}`,
+      marginX, 25
+    );
+    doc.text(`Сформирован: ${new Date(data.generatedAt).toLocaleString('ru')}`, marginX, 30);
+    doc.setTextColor(0);
+
+    autoTable(doc, {
+      startY: 36,
+      head: [['Общая выработка', 'Среднее время работы', 'Простой', 'Ошибки', 'Эффективность']],
+      body: [[
+        `${data.summary.totalOutput} дет.`,
+        `${data.summary.avgUptime}%`,
+        `${data.summary.totalDowntime} ч`,
+        String(data.summary.totalErrors),
+        `${data.summary.efficiency}%`,
+      ]],
+      theme: 'grid',
+      headStyles: { fillColor: [25, 118, 210] },
+      margin: { left: marginX, right: marginX },
+    });
+
+    // jspdf-autotable records the last table's end position on the doc
+    // instance itself (not in the return value) — this is the documented
+    // way to chain content after a table, hence the `any` cast.
+    let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+
+    // JPEG at 0.85 quality instead of the PNG default: the canvas renders
+    // at devicePixelRatio (often 2x+), so an uncompressed PNG export here
+    // was pushing the whole PDF to several MB for one chart.
+    const chartImage = this.chartDirective?.chart?.toBase64Image('image/jpeg', 0.85);
+    if (chartImage) {
+      doc.setFontSize(12);
+      doc.text('Выработка по периодам', marginX, y);
+      doc.addImage(chartImage, 'JPEG', marginX, y + 4, 180, 70);
+      y += 84;
+    }
+
+    doc.setFontSize(12);
+    doc.text('Разбивка по станкам', marginX, y);
+    autoTable(doc, {
+      startY: y + 4,
+      head: [['Станок', 'Выработка', 'Работа %', 'Простой', 'Ошибки', 'КПД %']],
+      body: data.machineBreakdown.map(row => [
+        row.machineName,
+        `${row.totalOutput} дет.`,
+        `${row.uptimePercent}%`,
+        `${row.downtimeHours}ч`,
+        String(row.errorCount),
+        `${row.efficiency}%`,
+      ]),
+      theme: 'striped',
+      headStyles: { fillColor: [25, 118, 210] },
+      margin: { left: marginX, right: marginX },
+    });
+
+    doc.save(`report-${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
   private buildChart(data: ReportData): void {
@@ -129,6 +198,10 @@ export class ReportsComponent implements OnInit {
 
   private formatDate(d: Date): string {
     return new Date(d).toLocaleDateString('ru', { month: 'short', day: 'numeric' });
+  }
+
+  private formatDateShort(d: Date): string {
+    return new Date(d).toLocaleDateString('ru');
   }
 
   toggleMachine(id: string): void {
