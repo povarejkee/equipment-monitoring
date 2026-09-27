@@ -53,10 +53,24 @@ export class AuthService {
 
   /**
    * Idempotent: N parallel 401s all land here, but only the first one that
-   * actually had a session to tear down navigates.
+   * actually had a session to tear down does anything.
    */
   logout(): void {
     const hadSession = this.isAuthenticated || localStorage.getItem(this.TOKEN_KEY) !== null;
+
+    if (hadSession) {
+      // Invalidate the session server-side too — previously this only
+      // cleared local state, so a token copied before logout (or just
+      // never actually revoked) stayed valid on the server for its full
+      // 24h TTL. Must fire before the state clear below: authInterceptor
+      // attaches the Authorization header by reading current authState,
+      // so clearing first would send this request with no token and the
+      // (auth-protected) endpoint would 401 instead of revoking anything.
+      // Best-effort — local cleanup happens unconditionally either way,
+      // and a failure here (offline, already expired) changes nothing
+      // from the client's perspective.
+      this.http.post(`${environment.apiUrl}/auth/logout`, {}).subscribe({ error: () => {} });
+    }
 
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
