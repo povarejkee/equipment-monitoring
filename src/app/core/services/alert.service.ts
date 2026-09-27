@@ -10,7 +10,7 @@ import { NotificationSoundService } from './notification-sound.service';
  * (only "machines" is a WebSocket topic) — polling is the cheap, honest
  * middle ground between "never updates after page load" (the previous
  * behavior) and standing up a whole new push channel for this. */
-const POLL_INTERVAL_MS = 25_000;
+export const POLL_INTERVAL_MS = 25_000;
 
 @Injectable({ providedIn: 'root' })
 export class AlertService {
