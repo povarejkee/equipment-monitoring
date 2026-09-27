@@ -1,0 +1,49 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Редактировать пользователя' : 'Новый пользователь' }}</h2>
+
+<mat-dialog-content class="form-content">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Имя</mat-label>
+    <input matInput [(ngModel)]="name" required>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Email</mat-label>
+    <input matInput type="email" [(ngModel)]="email" required>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>{{ isEdit ? 'Новый пароль (оставьте пустым, чтобы не менять)' : 'Пароль' }}</mat-label>
+    <input matInput type="password" [(ngModel)]="password" autocomplete="new-password">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Роль</mat-label>
+    <mat-select [(ngModel)]="role">
+      <mat-option [value]="UserRole.OPERATOR">Оператор</mat-option>
+      <mat-option [value]="UserRole.MANAGER">Менеджер</mat-option>
+      <mat-option [value]="UserRole.ADMIN">Администратор</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  @if (role === UserRole.OPERATOR) {
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Назначенные станки</mat-label>
+      <mat-select [(ngModel)]="assignedMachines" multiple>
+        @for (m of machines; track m.id) {
+          <mat-option [value]="m.id">{{ m.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+
+  @if (error) {
+    <div class="form-error"><mat-icon>error</mat-icon> {{ error }}</div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="dialogRef.close()">Отмена</button>
+  <button mat-flat-button color="primary" [disabled]="!canSubmit || saving" (click)="submit()">
+    {{ isEdit ? 'Сохранить' : 'Создать' }}
+  </button>
+</mat-dialog-actions>

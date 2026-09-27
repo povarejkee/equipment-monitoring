@@ -1,0 +1,22 @@
+.form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 360px;
+  padding-top: 8px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #D32F2F;
+  font-size: 13px;
+  margin-top: -8px;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}

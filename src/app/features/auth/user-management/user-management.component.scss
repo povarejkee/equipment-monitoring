@@ -11,16 +11,6 @@
 .page-title { font-size: 24px; font-weight: 700; color: #212121; margin: 0 0 4px; }
 .page-subtitle { font-size: 14px; color: #757575; margin: 0; }
 
-.v2-hint {
-  font-size: 10px;
-  background: #E3F2FD;
-  color: #1565C0;
-  padding: 1px 5px;
-  border-radius: 4px;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-
 .users-table { width: 100%; font-size: 14px; }
 th.mat-header-cell { font-size: 12px; font-weight: 600; color: #757575; background: #FAFAFA; }
 
@@ -62,13 +52,30 @@ th.mat-header-cell { font-size: 12px; font-weight: 600; color: #757575; backgrou
 .machines-count { font-size: 13px; color: #424242; }
 .all-machines   { font-size: 13px; color: #9E9E9E; font-style: italic; }
 
-.v2-note {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  font-size: 13px;
-  color: #9E9E9E;
+.you-badge {
+  font-size: 10px;
+  background: #F5F5F5;
+  color: #757575;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
 
-  mat-icon { font-size: 16px; width: 16px; height: 16px; color: #BDBDBD; }
+.actions-cell {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.state-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px;
+  color: #9E9E9E;
+  font-size: 14px;
+
+  mat-icon { font-size: 40px; width: 40px; height: 40px; }
+  &.error { color: #F44336; }
 }

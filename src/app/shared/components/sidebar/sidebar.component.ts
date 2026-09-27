@@ -30,7 +30,7 @@ export class SidebarComponent {
     { label: 'Отчёты', icon: 'bar_chart', route: '/reports', roles: [UserRole.MANAGER, UserRole.ADMIN] },
     { label: 'Уведомления', icon: 'notifications', route: '/notifications' },
     { label: 'Настройки', icon: 'settings', route: '/settings' },
-    { label: 'Пользователи', icon: 'group', route: '/admin/users', roles: [UserRole.ADMIN] },
+    { label: 'Пользователи', icon: 'group', route: '/admin/users', roles: [UserRole.MANAGER, UserRole.ADMIN] },
   ];
 
   constructor(public auth: AuthService) {}

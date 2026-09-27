@@ -18,7 +18,7 @@ export const routes: Routes = [
       { path: 'reports', canActivate: [roleGuard([UserRole.MANAGER, UserRole.ADMIN])], loadChildren: () => import('./features/reports/reports.routes').then(m => m.REPORTS_ROUTES) },
       { path: 'notifications', loadChildren: () => import('./features/notifications/notifications.routes').then(m => m.NOTIFICATIONS_ROUTES) },
       { path: 'settings', loadChildren: () => import('./features/settings/settings.routes').then(m => m.SETTINGS_ROUTES) },
-      { path: 'admin/users', canActivate: [roleGuard([UserRole.ADMIN])], loadComponent: () => import('./features/auth/user-management/user-management.component').then(m => m.UserManagementComponent) },
+      { path: 'admin/users', canActivate: [roleGuard([UserRole.MANAGER, UserRole.ADMIN])], loadComponent: () => import('./features/auth/user-management/user-management.component').then(m => m.UserManagementComponent) },
     ]
   },
   { path: '**', redirectTo: 'dashboard' }
