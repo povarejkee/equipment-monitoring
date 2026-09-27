@@ -51,8 +51,25 @@ mat-card-content { padding-top: 12px !important; }
 .toggle-label { display: block; font-size: 14px; font-weight: 500; color: #212121; }
 .toggle-hint  { display: block; font-size: 12px; color: #9E9E9E; margin-top: 2px; }
 
-.save-bar {
+.test-sound-btn {
+  margin-top: 8px;
+}
+
+.connection-row {
   display: flex;
-  justify-content: flex-end;
-  padding-top: 4px;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #424242;
+  padding: 10px 0;
+}
+
+.conn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.ok   { background: #4CAF50; }
+  &.down { background: #F44336; }
 }

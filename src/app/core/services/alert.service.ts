@@ -1,9 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, concat, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, concat, interval, of } from 'rxjs';
 import { last, map, tap } from 'rxjs/operators';
-import { Alert, AlertThreshold } from '../models/alert.model';
+import { Alert, AlertSeverity, AlertThreshold } from '../models/alert.model';
 import { environment } from '../../../environments/environment';
+import { NotificationSoundService } from './notification-sound.service';
+
+/** How often to re-check for new alerts. There's no live push for alerts
+ * (only "machines" is a WebSocket topic) — polling is the cheap, honest
+ * middle ground between "never updates after page load" (the previous
+ * behavior) and standing up a whole new push channel for this. */
+const POLL_INTERVAL_MS = 25_000;
 
 @Injectable({ providedIn: 'root' })
 export class AlertService {
@@ -18,8 +25,10 @@ export class AlertService {
   alertsFailed$ = this.alertsFailedSubject.asObservable();
 
   private loaded = false;
+  private pollSub: Subscription | null = null;
+  private knownAlertIds = new Set<string>();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private sound: NotificationSoundService) {}
 
   private ensureLoaded(): void {
     if (this.loaded) return;
@@ -30,6 +39,9 @@ export class AlertService {
         next: (t) => this.thresholdsSubject.next(t),
         error: () => this.thresholdsSubject.next([]),
       });
+
+    this.pollSub?.unsubscribe();
+    this.pollSub = interval(POLL_INTERVAL_MS).subscribe(() => this.refresh());
   }
 
   private refresh(): void {
@@ -37,6 +49,7 @@ export class AlertService {
       .subscribe({
         next: (a) => {
           this.alertsFailedSubject.next(false);
+          this.notifyOfNewCriticalAlerts(a);
           this.alertsSubject.next(a);
         },
         error: () => {
@@ -47,9 +60,24 @@ export class AlertService {
       });
   }
 
+  /** Beeps once per refresh if it introduced a new, still-unacknowledged
+   * critical alert — not on the very first load (that would beep for
+   * every pre-existing critical alert the moment the app opens). */
+  private notifyOfNewCriticalAlerts(alerts: Alert[]): void {
+    const isFirstLoad = this.knownAlertIds.size === 0 && this.alertsSubject.value.length === 0;
+    const newCritical = !isFirstLoad && alerts.some(
+      (a) => a.severity === AlertSeverity.CRITICAL && !a.acknowledged && !this.knownAlertIds.has(a.id)
+    );
+    this.knownAlertIds = new Set(alerts.map((a) => a.id));
+    if (newCritical) this.sound.play();
+  }
+
   /** Drops the cached alerts so the next user never sees the previous one's data. */
   reset(): void {
     this.loaded = false;
+    this.knownAlertIds = new Set();
+    this.pollSub?.unsubscribe();
+    this.pollSub = null;
     this.alertsSubject.next([]);
     this.thresholdsSubject.next([]);
     this.alertsFailedSubject.next(false);
