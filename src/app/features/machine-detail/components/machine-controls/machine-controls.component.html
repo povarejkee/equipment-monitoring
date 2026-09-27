@@ -1,0 +1,38 @@
+<div class="section-card">
+  <h3 class="section-title"><mat-icon>build</mat-icon> Управление станком</h3>
+
+  @if (!isStopped) {
+    <div class="stop-row">
+      <mat-form-field appearance="outline" class="reason-field">
+        <mat-label>Причина (необязательно)</mat-label>
+        <input matInput [(ngModel)]="reason" placeholder="Например: замена подшипника">
+      </mat-form-field>
+      <button mat-stroked-button [disabled]="busy" (click)="stop(MachineStatus.MAINTENANCE)">
+        <mat-icon>build</mat-icon> Отправить на ТО
+      </button>
+      <button mat-stroked-button color="warn" [disabled]="busy" (click)="stop(MachineStatus.OFFLINE)">
+        <mat-icon>power_off</mat-icon> Отметить офлайн
+      </button>
+    </div>
+  } @else {
+    <div class="resume-row">
+      <span class="stopped-note">Станок остановлен ({{ machine.status === MachineStatus.MAINTENANCE ? 'ТО' : 'офлайн' }})</span>
+      <button mat-flat-button color="primary" [disabled]="busy" (click)="resume()">
+        <mat-icon>play_arrow</mat-icon> Вернуть в работу
+      </button>
+    </div>
+  }
+
+  <div class="maintenance-row">
+    <mat-form-field appearance="outline" class="date-field">
+      <mat-label>Плановое ТО</mat-label>
+      <input matInput [matDatepicker]="picker" [(ngModel)]="maintenanceDate">
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+    <button mat-stroked-button [disabled]="busy" (click)="saveMaintenanceDate()">Сохранить</button>
+    @if (machine.nextMaintenanceAt) {
+      <button mat-button [disabled]="busy" (click)="clearMaintenanceDate()">Снять напоминание</button>
+    }
+  </div>
+</div>

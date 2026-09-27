@@ -1,0 +1,37 @@
+.section-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #212121;
+  margin: 0 0 16px;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; color: #9E9E9E; }
+}
+
+.stop-row, .resume-row, .maintenance-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.reason-field, .date-field {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.stopped-note {
+  font-size: 13px;
+  color: #F57C00;
+  font-weight: 500;
+}

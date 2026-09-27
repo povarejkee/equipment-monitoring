@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Machine, MetricHistoryPoint, DowntimeEntry } from '../models/machine.model';
+import { map, tap } from 'rxjs/operators';
+import { Machine, MachineStatus, MetricHistoryPoint, DowntimeEntry } from '../models/machine.model';
 import { WebSocketService } from './websocket.service';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
@@ -87,5 +87,30 @@ export class MachineService {
 
   getDowntimes(machineId: string): Observable<DowntimeEntry[]> {
     return this.http.get<DowntimeEntry[]>(`${environment.apiUrl}/machines/${machineId}/downtimes`);
+  }
+
+  /** Manager/admin only — stop/resume a machine (see canonical rules server-side). */
+  updateStatus(machineId: string, status: MachineStatus, reason?: string): Observable<Machine> {
+    return this.http
+      .put<Machine>(`${environment.apiUrl}/machines/${machineId}/status`, { status, reason })
+      .pipe(tap((updated) => this.mergeMachine(updated)));
+  }
+
+  /** Manager/admin only — set (or, with null, clear) the next scheduled maintenance date. */
+  updateMaintenanceSchedule(machineId: string, nextMaintenanceAt: string | null): Observable<Machine> {
+    return this.http
+      .put<Machine>(`${environment.apiUrl}/machines/${machineId}/maintenance-schedule`, { nextMaintenanceAt })
+      .pipe(tap((updated) => this.mergeMachine(updated)));
+  }
+
+  /** Applies a mutation response immediately instead of waiting for the
+   * next ~4s WebSocket tick to reflect it. */
+  private mergeMachine(updated: Machine): void {
+    const s = this.stateSubject.value;
+    if (s.status !== 'loaded') return;
+    this.stateSubject.next({
+      status: 'loaded',
+      machines: s.machines.map((m) => (m.id === updated.id ? updated : m)),
+    });
   }
 }

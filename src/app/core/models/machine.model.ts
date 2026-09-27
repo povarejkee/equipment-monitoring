@@ -34,6 +34,8 @@ export interface Machine {
   metrics: MachineMetrics;
   lastUpdated: Date;
   assignedOperator?: string;
+  /** ISO date string — API dates are strings, not Date, until parsed. */
+  nextMaintenanceAt?: string;
 }
 
 export interface DowntimeEntry {

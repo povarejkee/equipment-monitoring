@@ -14,10 +14,17 @@
             <span><mat-icon>category</mat-icon> {{ typeLabels[lookup.machine.type] }}</span>
             <span><mat-icon>location_on</mat-icon> {{ lookup.machine.location }}</span>
             <span><mat-icon>schedule</mat-icon> Работа: {{ lookup.machine.metrics.uptime }}ч</span>
+            @if (lookup.machine.nextMaintenanceAt) {
+              <span><mat-icon>build</mat-icon> ТО: {{ lookup.machine.nextMaintenanceAt | date:'dd.MM.yyyy' }}</span>
+            }
             <span class="last-updated"><mat-icon>sync</mat-icon> Обновлено: {{ lookup.machine.lastUpdated | date:'HH:mm:ss' }}</span>
           </div>
         </div>
       </div>
+
+      <section class="section" *roleVisible="[UserRole.MANAGER, UserRole.ADMIN]">
+        <app-machine-controls [machine]="lookup.machine"></app-machine-controls>
+      </section>
 
       <section class="section">
         <h2 class="section-heading">Метрики в реальном времени</h2>

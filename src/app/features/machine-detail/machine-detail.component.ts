@@ -10,7 +10,10 @@ import { MetricsPanelComponent } from './components/metrics-panel/metrics-panel.
 import { HistoryChartComponent } from './components/history-chart/history-chart.component';
 import { DowntimeLogComponent } from './components/downtime-log/downtime-log.component';
 import { AlertHistoryComponent } from './components/alert-history/alert-history.component';
+import { MachineControlsComponent } from './components/machine-controls/machine-controls.component';
 import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
+import { RoleVisibleDirective } from '../../shared/directives/role-visible.directive';
+import { UserRole } from '../../core/models/user.model';
 
 @Component({
   selector: 'app-machine-detail',
@@ -18,13 +21,15 @@ import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner
   imports: [
     CommonModule, AsyncPipe, RouterModule, MatIconModule, MatButtonModule,
     StatusBadgeComponent, MetricsPanelComponent, HistoryChartComponent,
-    DowntimeLogComponent, AlertHistoryComponent, LoadingSpinnerComponent
+    DowntimeLogComponent, AlertHistoryComponent, MachineControlsComponent,
+    LoadingSpinnerComponent, RoleVisibleDirective
   ],
   templateUrl: './machine-detail.component.html',
   styleUrls: ['./machine-detail.component.scss']
 })
 export class MachineDetailComponent implements OnInit {
   lookup$!: Observable<MachineLookup>;
+  readonly UserRole = UserRole;
 
   readonly typeLabels: Record<string, string> = {
     cnc: 'ЧПУ', lathe: 'Токарный', milling: 'Фрезерный',
